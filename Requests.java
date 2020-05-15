@@ -18,6 +18,7 @@ public class Requests {
     private int start = 0;
     private int end = 0;
     private int counter = 0;
+    private final int BUFFER_SIZE = 4096;
 
     public void check_dir() {
         File f = new File(this.dir);
@@ -67,9 +68,9 @@ public class Requests {
     public void download_video(String url, String directory) {
         try (BufferedInputStream in = new BufferedInputStream(new URL(url).openStream());
                 FileOutputStream out = new FileOutputStream(directory)) {
-            byte buffer[] = new byte[4096];
+            byte buffer[] = new byte[this.BUFFER_SIZE];
             int num_bytes;
-            while ((num_bytes = in.read(buffer, 0, 4096)) != -1) {
+            while ((num_bytes = in.read(buffer, 0, this.BUFFER_SIZE)) != -1) {
                 out.write(buffer, 0, num_bytes);
             }
         } catch (IOException e) {
