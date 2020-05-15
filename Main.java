@@ -4,6 +4,7 @@ public class Main {
     
     public static void main(String[] args) {
         System.out.println("-- OPT Downloader --\n");
+
         Scanner scanner = new Scanner(System.in);
         System.out.print("Starting episode: ");
         int start = scanner.nextInt();
@@ -12,7 +13,9 @@ public class Main {
         System.out.print("Amount threads: ");
         int amount_threads = scanner.nextInt();
         scanner.close();
+
         System.out.print("\n");
+        
         Requests r = new Requests();
         r.main(start, end);
         System.out.print("\n");
