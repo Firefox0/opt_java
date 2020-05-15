@@ -16,8 +16,9 @@ public class Requests {
     private String dir = String.format("%s\\One Piece", System.getProperty("user.dir"));
     private ArrayList<String> videos = new ArrayList<String>();
     private int start = 0;
-    private int end = 0;
-    private int counter = 0;
+    private int amount_episodes = 0;
+    private int download_counter = 0;
+    private int episode_counter = 0;
     private final int BUFFER_SIZE = 4096;
 
     public void check_dir() {
@@ -78,24 +79,51 @@ public class Requests {
         }
     }
 
-    public void handle_downloads() {
-        while (this.videos.get(this.end) != null) {
-            int episode = this.counter + this.start;
-            String video_url = this.videos.get(this.counter);
-            this.videos.set(this.counter, null);
-            this.counter++;
-
-            System.out.println(String.format("Downloading episode %s...", episode));
-            String directory = String.format("%s\\One Piece - %s.mp4", this.dir, episode);
-            this.download_video(video_url, directory);
-            System.out.println(String.format("Finished downloading %s...", episode));
+    public synchronized String handle_iteration() {
+        if (this.download_counter >= this.videos.size()) {
+            return null;
         }
+        String video_url = this.videos.get(this.download_counter);
+        if (video_url == null) {
+            System.out.println("here man");
+            return null;
+        }
+        this.videos.set(this.download_counter, null);
+        this.download_counter++;
+        return video_url;
     }
 
-    public String get_video_url(int episode) {
-        System.out.println(String.format("Processing episode %s...", episode));
+    public void handle_downloads() {
+        while (true) {
 
-        String starting_url = this.get_opt_url(episode);
+            while (this.download_counter < this.amount_episodes) {
+                String video_url = this.handle_iteration();
+                if (video_url == null) {
+                    continue;
+                }
+                int episode = this.download_counter + this.start - 1;
+                System.out.println(String.format("Downloading episode %s...", episode));
+                String directory = String.format("%s\\One Piece - %s.mp4", this.dir, episode);
+                this.download_video(video_url, directory);
+                System.out.println(String.format("Finished downloading %s...", episode));
+
+            }
+        }
+    }
+    
+    public synchronized String handle_episode_iteration() {
+        int current_episode = this.episode_counter + this.start;
+        System.out.println(String.format("Processing episode %s...", current_episode));
+        String starting_url = this.get_opt_url(current_episode);
+        this.episode_counter++;
+        return starting_url;
+    }
+
+    public String get_video_url() {
+        if (this.episode_counter >= this.amount_episodes) {
+            return null;
+        }
+        String starting_url = this.handle_episode_iteration();
         String opt_source = this.request_source(starting_url);
         String html = this.extract_html_url(opt_source);
         String html_source = this.request_source(html);
@@ -107,17 +135,20 @@ public class Requests {
         return video_url;
     }
 
-    public void main(int start, int end) {
-        this.start = start;
-        this.end = end-start;
-        this.check_dir();
-
-        for (int i = 0; i < end-start+1; i++) {
-            String video_url = this.get_video_url(i+start);
+    public void handle_videos() {
+        while (this.episode_counter < this.amount_episodes) {
+            String video_url = this.get_video_url();
             if (video_url == null) {
+                System.out.println("ERROR HERE LOL");
                 return;
             }
-            this.videos.add(video_url);
-        }
+            this.videos.add(video_url);add(video_url);
+        } 
+    }
+    
+    public void main(int start, int end) {
+        this.start = start;
+        this.amount_episodes = end-start+1;
+        this.check_dir();
     }
 }
