@@ -11,16 +11,6 @@ import java.util.ArrayList;
 
 public class Requests {
 
-    public class Pair {
-        public int episode;
-        public String video_url;
-
-        Pair(int episode, String video_url) {
-            this.episode = episode;
-            this.video_url = video_url;
-        }
-    }
-
     private String base_url_fh = "http://onepiece-tube.com/folge/";
     private String base_url_sh = "-tBvZaU";
     private String dir = String.format("%s\\One Piece", System.getProperty("user.dir"));
