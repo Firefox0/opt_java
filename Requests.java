@@ -8,12 +8,6 @@ import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.util.ArrayList;
-import java.util.concurrent.TimeUnit;
-
-/* 
-    multithreading
-    finish all other funcs
-*/
 
 public class Requests {
 
