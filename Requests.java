@@ -88,7 +88,6 @@ public class Requests {
             System.out.println("here man");
             return null;
         }
-        this.videos.set(this.download_counter, null);
         this.download_counter++;
         return video_url;
     }
@@ -142,7 +141,7 @@ public class Requests {
                 System.out.println("ERROR HERE LOL");
                 return;
             }
-            this.videos.add(video_url);add(video_url);
+            this.videos.add(video_url);
         } 
     }
     
