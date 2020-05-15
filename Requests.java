@@ -78,28 +78,28 @@ public class Requests {
     }
 
     public void handle_downloads() {
-        while (true) {
+        while (this.videos.get(this.end) != null) {
             int episode = this.counter + this.start;
             String video_url = this.videos.get(this.counter);
             this.videos.set(this.counter, null);
             this.counter++;
+
             System.out.println(String.format("Downloading episode %s...", episode));
             String directory = String.format("%s\\One Piece - %s.mp4", this.dir, episode);
             this.download_video(video_url, directory);
             System.out.println(String.format("Finished downloading %s...", episode));
-            if (this.videos.get(this.videos.size() - 1) == null) {
-                return;
-            }
         }
     }
 
     public String get_video_url(int episode) {
         System.out.println(String.format("Processing episode %s...", episode));
+
         String starting_url = this.get_opt_url(episode);
         String opt_source = this.request_source(starting_url);
         String html = this.extract_html_url(opt_source);
         String html_source = this.request_source(html);
         String video_url = this.extract_video_url(html_source);
+
         if (video_url == null) {
             System.out.println("Error while trying to get direct video url. Your IP might be banned.");
         } 
@@ -108,8 +108,9 @@ public class Requests {
 
     public void main(int start, int end) {
         this.start = start;
-        this.end = end+1;
+        this.end = end-start;
         this.check_dir();
+
         for (int i = 0; i < end-start+1; i++) {
             String video_url = this.get_video_url(i+start);
             if (video_url == null) {
