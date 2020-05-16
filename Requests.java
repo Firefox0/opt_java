@@ -8,18 +8,37 @@ import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.util.ArrayList;
+import java.util.concurrent.TimeUnit;
 
 public class Requests {
 
     private String base_url_fh = "http://onepiece-tube.com/folge/";
     private String base_url_sh = "-tBvZaU";
     private String dir = String.format("%s\\One Piece", System.getProperty("user.dir"));
-    private ArrayList<String> videos = new ArrayList<String>();
+    private ArrayList<Pair> videos = new ArrayList<Pair>();
     private int start = 0;
     private int amount_episodes = 0;
     private int download_counter = 0;
     private int episode_counter = 0;
     private final int BUFFER_SIZE = 4096;
+
+    public class Pair {
+        private int integer;
+        private String string;
+
+        public Pair(Integer integer, String string) {
+            this.integer = integer;
+            this.string = string;
+        }
+
+        public int integer() {
+            return this.integer;
+        }
+
+        public String string() {
+            return string;
+        }
+    }
 
     public void check_dir() {
         File f = new File(this.dir);
@@ -35,11 +54,8 @@ public class Requests {
 
     public String request_source(String url) {
         HttpClient client = HttpClient.newHttpClient();
-        HttpRequest request = HttpRequest.newBuilder()
-                                        .uri(URI.create(url))
-                                        .build();
-        HttpResponse<String> response = client.sendAsync(request, HttpResponse.BodyHandlers.ofString())
-                                            .join();
+        HttpRequest request = HttpRequest.newBuilder().uri(URI.create(url)).build();
+        HttpResponse<String> response = client.sendAsync(request, HttpResponse.BodyHandlers.ofString()).join();
         String response_body = response.body();
         return response_body;
     }
@@ -79,50 +95,48 @@ public class Requests {
         }
     }
 
-    public synchronized String handle_iteration() {
+    public synchronized Pair handle_iteration() {
         if (this.download_counter >= this.videos.size()) {
             return null;
         }
-        String video_url = this.videos.get(this.download_counter);
-        if (video_url == null) {
-            System.out.println("here man");
-            return null;
-        }
+        Pair video = this.videos.get(this.download_counter);
         this.download_counter++;
-        return video_url;
+        return video;
     }
 
     public void handle_downloads() {
-        while (true) {
-
-            while (this.download_counter < this.amount_episodes) {
-                String video_url = this.handle_iteration();
-                if (video_url == null) {
-                    continue;
+        while (this.download_counter < this.amount_episodes) {
+            Pair pair = this.handle_iteration();
+            if (pair == null) {
+                try {
+                    TimeUnit.MILLISECONDS.sleep(50);
+                } catch (InterruptedException e) {
+                    assert true;
                 }
-                int episode = this.download_counter + this.start - 1;
-                System.out.println(String.format("Downloading episode %s...", episode));
-                String directory = String.format("%s\\One Piece - %s.mp4", this.dir, episode);
-                this.download_video(video_url, directory);
-                System.out.println(String.format("Finished downloading %s...", episode));
-
+                continue;
             }
+            int episode = pair.integer();
+            String video_url = pair.string();
+            System.out.println(String.format("Downloading episode %s...", episode));
+            String directory = String.format("%s\\One Piece - %s.mp4", this.dir, episode);
+            this.download_video(video_url, directory);
+            System.out.println(String.format("Finished downloading %s...", episode));
         }
     }
     
-    public synchronized String handle_episode_iteration() {
+    public synchronized Pair handle_episode_iteration() {
         int current_episode = this.episode_counter + this.start;
         System.out.println(String.format("Processing episode %s...", current_episode));
         String starting_url = this.get_opt_url(current_episode);
         this.episode_counter++;
-        return starting_url;
+        Pair pair = new Pair(current_episode, starting_url);
+        return pair;
     }
 
     public String get_video_url() {
-        if (this.episode_counter >= this.amount_episodes) {
-            return null;
-        }
-        String starting_url = this.handle_episode_iteration();
+        Pair starting = this.handle_episode_iteration();
+        int episode = starting.integer();
+        String starting_url = starting.string();
         String opt_source = this.request_source(starting_url);
         String html = this.extract_html_url(opt_source);
         String html_source = this.request_source(html);
@@ -130,19 +144,21 @@ public class Requests {
 
         if (video_url == null) {
             System.out.println("Error while trying to get direct video url. Your IP might be banned.");
+            return video_url;
         } 
+
+        Pair final_pair = new Pair(episode, video_url);
+        this.videos.add(final_pair);
+        System.out.println(String.format("Finished processing episode: %s (%s)", episode, video_url));
         return video_url;
     }
 
     public void handle_videos() {
         while (this.episode_counter < this.amount_episodes) {
-            String video_url = this.get_video_url();
-            if (video_url == null) {
-                System.out.println("ERROR HERE LOL");
-                return;
+            if (this.get_video_url() == null) {
+                System.exit(0);
             }
-            this.videos.add(video_url);
-        } 
+        }
     }
     
     public void main(int start, int end) {
