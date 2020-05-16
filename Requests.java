@@ -22,24 +22,6 @@ public class Requests {
     private int episode_counter = 0;
     private final int BUFFER_SIZE = 4096;
 
-    public class Pair {
-        private int integer;
-        private String string;
-
-        public Pair(Integer integer, String string) {
-            this.integer = integer;
-            this.string = string;
-        }
-
-        public int integer() {
-            return this.integer;
-        }
-
-        public String string() {
-            return string;
-        }
-    }
-
     public void check_dir() {
         File f = new File(this.dir);
         if (!f.isDirectory()) {
