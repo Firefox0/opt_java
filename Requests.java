@@ -138,7 +138,7 @@ public class Requests {
     public void handle_videos() {
         while (this.episode_counter < this.amount_episodes) {
             if (this.get_video_url() == null) {
-                System.exit(0);
+                return;
             }
         }
     }
