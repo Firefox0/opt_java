@@ -12,6 +12,6 @@ public class Pair {
     }
 
     public String string() {
-        return string;
+        return this.string;
     }
 }
